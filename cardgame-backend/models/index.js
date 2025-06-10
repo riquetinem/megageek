@@ -1,23 +1,18 @@
-const { Sequelize } = require('sequelize');
 const fs = require('fs');
 const path = require('path');
-require('dotenv').config();
-
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASS,
-  {
-    host: process.env.DB_HOST,
-    dialect: 'postgres',
-    logging: false,
-  }
-);
-
+const Sequelize = require('sequelize');
+const basename = path.basename(__filename);
+const env = process.env.NODE_ENV || 'development';
+const config = require(__dirname + '/../config/config.js')[env];
 const db = {};
 
-fs.readdirSync(__dirname)
-  .filter(file => file !== 'index.js' && file.endsWith('.js'))
+const sequelize = new Sequelize(config.database, config.username, config.password, config);
+
+fs
+  .readdirSync(__dirname)
+  .filter(file => (
+    file.indexOf('.') !== 0 && file !== basename && file.slice(-3) === '.js'
+  ))
   .forEach(file => {
     const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
     db[model.name] = model;
