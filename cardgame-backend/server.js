@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const clienteRoutes = require('./routes/clienteRoutes');
 const comandaRoutes = require('./routes/comandaRoutes');
@@ -7,6 +8,9 @@ const itemComandaRoutes = require('./routes/itemComandaRoutes');
 const productRoutes = require('./routes/productRoutes');
 const userRoutes = require('./routes/userRoutes');
 const tipoProdutoRoutes = require('./routes/tipoProdutoRoutes');
+
+// cors
+app.use(cors());
 
 // Middlewares
 app.use(express.json());
