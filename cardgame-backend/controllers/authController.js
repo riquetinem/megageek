@@ -19,7 +19,7 @@ module.exports = {
       const user = await User.create({
         nome,
         email,
-        senha: hashedPassword,
+        senha_hash: hashedPassword,
         role: role || 'funcionario',
       });
 
@@ -37,7 +37,7 @@ module.exports = {
       const user = await User.findOne({ where: { email } });
       if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
 
-      const senhaValida = await bcrypt.compare(senha, user.senha);
+      const senhaValida = await bcrypt.compare(senha, user.senha_hash);
       if (!senhaValida) return res.status(401).json({ error: 'Senha inválida' });
 
       const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, {
