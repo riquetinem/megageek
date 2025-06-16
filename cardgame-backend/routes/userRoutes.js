@@ -7,7 +7,7 @@ const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddle
 router.use(authenticateToken);
 
 // Apenas admin ou gerente podem acessar estas rotas
-router.get('/', authorizeRoles('admin', 'gerente'), userController.getAllUsers);
+router.get('/', userController.getAllUsers);
 router.post('/', authorizeRoles('admin', 'gerente'), userController.createUser);
 router.put('/:id/disable', authorizeRoles('admin', 'gerente'), userController.disableUser);
 

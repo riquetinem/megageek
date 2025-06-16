@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
   ItemComanda.associate = (models) => {
     ItemComanda.belongsTo(models.Comanda, { foreignKey: 'comanda_id' });
     ItemComanda.belongsTo(models.Produto, { foreignKey: 'produto_id' });
-    ItemComanda.belongsTo(models.User, { foreignKey: 'adicionado_por_id' });
+    ItemComanda.belongsTo(models.User, { foreignKey: 'adicionado_por_id', as: 'adicionadoPor' });
   };
 
   return ItemComanda;

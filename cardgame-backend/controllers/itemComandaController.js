@@ -13,7 +13,7 @@ module.exports = {
         comanda_id,
         produto_id,
         valor_unitario,
-        adicionado_por: req.user.id
+        adicionado_por_id: req.user.id
       });
 
       res.status(201).json(item);
