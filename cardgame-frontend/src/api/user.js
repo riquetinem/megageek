@@ -14,3 +14,8 @@ export const getUsuarios = async () => {
   const response = await api.get('/user');
   return response.data;
 };
+
+export async function cadastrarUsuario({ nome, email, senha, role }) {
+  const response = await api.post('/user', { nome, email, senha, role });
+  return response.data;
+}

@@ -3,7 +3,8 @@ module.exports = (sequelize, DataTypes) => {
     nome: { type: DataTypes.STRING, allowNull: false },
     descricao: { type: DataTypes.STRING },
     preco_padrao: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
-    ativo: { type: DataTypes.BOOLEAN, defaultValue: true }
+    ativo: { type: DataTypes.BOOLEAN, defaultValue: true },
+    estoque: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 }
   });
 
   Produto.associate = (models) => {

@@ -6,7 +6,12 @@ export default function ProdutosPage() {
   const { token } = useAuth();
   const [produtos, setProdutos] = useState([]);
   const [tipos, setTipos] = useState([]);
-  const [form, setForm] = useState({ nome: '', preco_padrao: '', tipo_produto_id: '' });
+  const [form, setForm] = useState({
+    nome: '',
+    preco_padrao: '',
+    tipo_produto_id: '',
+    estoque: ''
+  });
   const [editandoId, setEditandoId] = useState(null);
 
   const api = axios.create({
@@ -32,12 +37,16 @@ export default function ProdutosPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const payload = {
+        ...form,
+        estoque: parseInt(form.estoque) || 0
+      };
       if (editandoId) {
-        await api.put(`/product/${editandoId}`, form);
+        await api.put(`/product/${editandoId}`, payload);
       } else {
-        await api.post('/product', form);
+        await api.post('/product', payload);
       }
-      setForm({ nome: '', preco_padrao: '', tipo_produto_id: '' });
+      setForm({ nome: '', preco_padrao: '', tipo_produto_id: '', estoque: '' });
       setEditandoId(null);
       carregarProdutos();
     } catch (err) {
@@ -50,6 +59,7 @@ export default function ProdutosPage() {
       nome: produto.nome,
       preco_padrao: produto.preco_padrao,
       tipo_produto_id: produto.tipo_produto_id,
+      estoque: produto.estoque
     });
     setEditandoId(produto.id);
   };
@@ -82,6 +92,14 @@ export default function ProdutosPage() {
           className="border p-2 w-full"
           required
         />
+        <input
+          type="number"
+          placeholder="Estoque"
+          value={form.estoque}
+          onChange={(e) => setForm({ ...form, estoque: e.target.value })}
+          className="border p-2 w-full"
+          required
+        />
         <select
           value={form.tipo_produto_id}
           onChange={(e) => setForm({ ...form, tipo_produto_id: e.target.value })}
@@ -105,6 +123,7 @@ export default function ProdutosPage() {
           <tr className="bg-gray-100">
             <th className="p-2 border">Nome</th>
             <th className="p-2 border">Preço</th>
+            <th className="p-2 border">Estoque</th>
             <th className="p-2 border">Tipo</th>
             <th className="p-2 border">Ações</th>
           </tr>
@@ -114,6 +133,7 @@ export default function ProdutosPage() {
             <tr key={p.id}>
               <td className="border p-2">{p.nome}</td>
               <td className="border p-2">R$ {p.preco_padrao}</td>
+              <td className="border p-2">{p.estoque}</td>
               <td className="border p-2">{p.TipoProduto?.nome}</td>
               <td className="border p-2 space-x-2">
                 <button

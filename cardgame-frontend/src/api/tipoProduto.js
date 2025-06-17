@@ -1,6 +1,6 @@
 import api from './api';
 
-const API_URL = '/tipos-produto';
+const API_URL = '/tipo-produto';
 
 export async function getTiposProduto() {
   try {

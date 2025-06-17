@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { createClient, getClientById, updateClient } from '../../api/client';
+import { useAuth } from '../auth/AuthContext';
 
 export default function ClienteFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [nome, setNome] = useState('');
-  const [contato, setContato] = useState('');
+  const [email, setEmail] = useState('');
+  const [telefone, setTelefone] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -15,7 +18,8 @@ export default function ClienteFormPage() {
       getClientById(id)
         .then(data => {
           setNome(data.nome);
-          setContato(data.contato);
+          setEmail(data.email);
+          setTelefone(data.telefone);
         })
         .finally(() => setLoading(false));
     }
@@ -24,14 +28,17 @@ export default function ClienteFormPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const payload = { nome, email, telefone, user };
+      console.log('Payload sendo enviado:', payload); // 👈 adicione isso
       if (id) {
-        await updateClient(id, { nome, contato });
+        await updateClient(id, { nome, email, telefone });
       } else {
-        await createClient({ nome, contato });
+        await createClient({ nome, email, telefone, user });
       }
       navigate('/clientes');
     } catch (err) {
-      alert('Erro ao salvar cliente', err);
+      alert('Erro ao salvar cliente');
+      console.error(err);
     }
   };
 
@@ -52,11 +59,20 @@ export default function ClienteFormPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium">Contato</label>
+          <label className="block text-sm font-medium">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full border rounded p-2"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Telefone</label>
           <input
             type="text"
-            value={contato}
-            onChange={(e) => setContato(e.target.value)}
+            value={telefone}
+            onChange={(e) => setTelefone(e.target.value)}
             className="w-full border rounded p-2"
             required
           />

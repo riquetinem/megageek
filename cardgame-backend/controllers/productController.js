@@ -22,8 +22,8 @@ module.exports = {
 
   async create(req, res) {
     try {
-      const { nome, preco_padrao, tipo_produto_id } = req.body;
-      const novo = await Produto.create({ nome, preco_padrao, tipo_produto_id });
+      const { nome, preco_padrao, tipo_produto_id, estoque } = req.body;
+      const novo = await Produto.create({ nome, preco_padrao, tipo_produto_id, estoque });
       res.status(201).json(novo);
     } catch (err) {
       res.status(500).json({ error: 'Erro ao criar produto' });
@@ -32,10 +32,10 @@ module.exports = {
 
   async update(req, res) {
     try {
-      const { nome, preco_padrao, tipo_produto_id } = req.body;
+      const { nome, preco_padrao, tipo_produto_id, estoque } = req.body;
       const produto = await Produto.findByPk(req.params.id);
       if (!produto) return res.status(404).json({ error: 'Produto não encontrado' });
-      await produto.update({ nome, preco_padrao, tipo_produto_id });
+      await produto.update({ nome, preco_padrao, tipo_produto_id, estoque });
       res.json(produto);
     } catch (err) {
       res.status(500).json({ error: 'Erro ao atualizar produto' });

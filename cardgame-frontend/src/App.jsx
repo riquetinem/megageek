@@ -9,31 +9,37 @@ import ListarComandas from './pages/ListarComandas';
 import Produtos from './pages/Produto';
 import Categorias from './pages/TipoProduto';
 import Cliente from './pages/Cliente';
-// import Usuarios from './pages/Usuarios';
+import NovoUsuario from './pages/NovoUsuario';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { GlobalStyle } from './styles/GlobalStyles';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Rota pública */}
-        <Route path="/login" element={<Login />} />
-        
-        {/* Redirecionamento da raiz para login */}
-        <Route path="/" element={<Navigate to="/login" />} />
+    <>
+      <GlobalStyle />
+      <Router>
+        <Routes>
+          {/* Rota pública */}
+          <Route path="/login" element={<Login />} />
+          
+          {/* Redirecionamento da raiz para login */}
+          <Route path="/" element={<Navigate to="/login" />} />
 
-        {/* Rotas protegidas */}
-        <Route element={<ProtectedLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/nova-comanda" element={<NovaComanda />} />
-          <Route path="/comandas/:id" element={<DetalhesComanda />} />
-          <Route path="/comandas" element={<ListarComandas />} />
-          <Route path="/produtos" element={<Produtos />} />
-          <Route path="/categorias" element={<Categorias />} />
-          <Route path="/clientes" element={<Cliente />} />
-        </Route>
+          {/* Rotas protegidas */}
+          <Route element={<ProtectedLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/nova-comanda" element={<NovaComanda />} />
+            <Route path="/comandas/:id" element={<DetalhesComanda />} />
+            <Route path="/comandas" element={<ListarComandas />} />
+            <Route path="/produtos" element={<Produtos />} />
+            <Route path="/categorias" element={<Categorias />} />
+            <Route path="/clientes" element={<Cliente />} />
+            <Route path="/novo-usuario" element={<NovoUsuario />} />
+          </Route>
 
-      </Routes>
-    </Router>
+        </Routes>
+      </Router>
+    </>
   );
 }
 

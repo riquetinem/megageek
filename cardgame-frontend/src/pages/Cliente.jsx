@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { getClientes, createCliente, updateCliente, deleteCliente } from '../api/cliente';
+import { useAuth } from '../auth/AuthContext';
+
 
 export default function Clientes() {
+  const { user } = useAuth();
   const [clientes, setClientes] = useState([]);
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
@@ -20,7 +23,7 @@ export default function Clientes() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const cliente = { nome, email, telefone };
+    const cliente = { nome, email, telefone, user };
     if (editando) {
       await updateCliente(editando.id, cliente);
       setEditando(null);

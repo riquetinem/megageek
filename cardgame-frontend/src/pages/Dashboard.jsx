@@ -23,25 +23,24 @@ export default function Dashboard() {
   };
 
   const handleAbrirNovaComanda = () => {
-    navigate('/comandas/nova');
+    navigate('/nova-comanda');
   };
 
   return (
-    <div>
+    <div className="container">
       <h1>Comandas em Aberto</h1>
       <button onClick={handleAbrirNovaComanda}>Abrir Nova Comanda</button>
-      <ul>
+      
+      <div className="comanda-card">
         {comandas.map((comanda) => (
-          <li key={comanda.id}>
-            <div>
-              <strong>Cliente:</strong> {comanda.cliente?.nome || 'Sem cliente'}<br />
-              <strong>Funcionário:</strong> {comanda.usuario?.nome}<br />
-              <strong>Data de Abertura:</strong> {new Date(comanda.createdAt).toLocaleString()}<br />
-              <button onClick={() => handleIrParaComanda(comanda.id)}>Ir para Comanda</button>
-            </div>
-          </li>
+          <div key={comanda.id}>
+            <strong>Cliente:</strong> {comanda.Cliente?.nome || 'Sem cliente'}<br />
+            <strong>Funcionário:</strong> {comanda.abertoPor?.nome}<br />
+            <strong>Data de Abertura:</strong> {new Date(comanda.createdAt).toLocaleString()}<br />
+            <button onClick={() => handleIrParaComanda(comanda.id)}>Ir para Comanda</button>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

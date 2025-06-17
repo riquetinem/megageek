@@ -4,6 +4,7 @@ module.exports = {
   async getAll(req, res) {
     try {
       const clientes = await Cliente.findAll({ include: { model: User, as: 'cadastrado_por_usuario' } });
+      console.log(`clientes: ${clientes}`);
       res.json(clientes);
     } catch (err) {
       res.status(500).json({ error: 'Erro ao buscar clientes' });
@@ -22,8 +23,9 @@ module.exports = {
 
   async create(req, res) {
     try {
-      const { nome, contato } = req.body;
-      const cliente = await Cliente.create({ nome, contato, criado_por: req.user.id });
+      console.log(req.body.user);
+      const { nome, email, telefone, user } = req.body;
+      const cliente = await Cliente.create({ nome, email, telefone, criado_por_id: user.id });
       res.status(201).json(cliente);
     } catch (err) {
       res.status(500).json({ error: 'Erro ao criar cliente' });

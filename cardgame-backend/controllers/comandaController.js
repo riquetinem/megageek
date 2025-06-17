@@ -34,6 +34,7 @@ module.exports = {
           { model: User, as: 'fechadoPor' },
           {
             model: ItemComanda,
+            as: 'itens',
             include: [
               { model: Produto },
               { model: User, as: 'adicionadoPor' },
@@ -53,7 +54,7 @@ module.exports = {
       const { cliente_id } = req.body;
       const nova = await Comanda.create({
         cliente_id,
-        aberto_por: req.user.id,
+        aberto_por_id: req.user.id,
         data_abertura: new Date(),
         status: 'aberta'
       });
@@ -69,24 +70,40 @@ module.exports = {
         include: [
           {
             model: ItemComanda,
+            as: 'itens',
             include: [Produto]
           }
         ]
       });
 
-      if (!comanda) return res.status(404).json({ error: 'Comanda não encontrada' });
-      if (comanda.status === 'fechada') return res.status(400).json({ error: 'Comanda já está fechada' });
+      if (!comanda) {
+        return res.status(404).json({ error: 'Comanda não encontrada' });
+      }
 
-      const total = comanda.ItemComandas.reduce((acc, item) => acc + parseFloat(item.valor_unitario), 0);
+      if (comanda.status === 'fechada') {
+        return res.status(400).json({ error: 'Comanda já está fechada' });
+      }
+
+      // Calcula o total: preco_unitario * quantidade
+      const total = comanda.itens.reduce((acc, item) => {
+        const valor = parseFloat(item.preco_unitario || 0);
+        const qtd = parseInt(item.quantidade || 1);
+        return acc + (valor * qtd);
+      }, 0);
 
       comanda.status = 'fechada';
       comanda.fechado_por_id = req.user.id;
       comanda.data_fechamento = new Date();
-      comanda.valor_total = total;
+      comanda.valor_total = total.toFixed(2);
+
       await comanda.save();
 
-      res.json({ message: 'Comanda fechada com sucesso', total });
+      res.json({
+        message: 'Comanda fechada com sucesso',
+        total: comanda.valor_total
+      });
     } catch (err) {
+      console.error('Erro ao fechar comanda:', err);
       res.status(500).json({ error: 'Erro ao fechar comanda' });
     }
   }
