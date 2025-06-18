@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getComandasAbertas } from '../api/comandas';
 import { useNavigate } from 'react-router-dom';
+import { formatDateToBr } from '../utils/dateFormatter';
 
 export default function Dashboard() {
   const [comandas, setComandas] = useState([]);
@@ -36,7 +37,7 @@ export default function Dashboard() {
           <div key={comanda.id}>
             <strong>Cliente:</strong> {comanda.Cliente?.nome || 'Sem cliente'}<br />
             <strong>Funcionário:</strong> {comanda.abertoPor?.nome}<br />
-            <strong>Data de Abertura:</strong> {new Date(comanda.createdAt).toLocaleString()}<br />
+            <strong>Data de Abertura:</strong> {formatDateToBr(new Date(comanda.createdAt).toLocaleString())}<br />
             <button onClick={() => handleIrParaComanda(comanda.id)}>Ir para Comanda</button>
           </div>
         ))}

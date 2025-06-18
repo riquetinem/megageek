@@ -1,68 +1,123 @@
 import { useState } from 'react';
 import { cadastrarUsuario } from '../api/user';
+import { Container, Form, Button, Alert, Card } from 'react-bootstrap';
 
 export default function CadastroFuncionario() {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [role, setRole] = useState('funcionario');
-  const [mensagem, setMensagem] = useState('');
+  const [mensagem, setMensagem] = useState({ texto: '', tipo: '' });
+  const [validated, setValidated] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const form = e.currentTarget;
+    
+    if (form.checkValidity() === false) {
+      e.stopPropagation();
+      setValidated(true);
+      return;
+    }
+
     try {
       await cadastrarUsuario({ nome, email, senha, role });
-      setMensagem('Funcionário cadastrado com sucesso!');
+      setMensagem({ texto: 'Funcionário cadastrado com sucesso!', tipo: 'success' });
       setNome('');
       setEmail('');
       setSenha('');
       setRole('funcionario');
+      setValidated(false);
     } catch (err) {
-      setMensagem(err.response?.data?.error || 'Erro ao cadastrar');
+      setMensagem({ 
+        texto: err.response?.data?.error || 'Erro ao cadastrar funcionário', 
+        tipo: 'danger' 
+      });
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-4">
-      <h1 className="text-xl font-bold mb-4">Cadastrar Funcionário</h1>
+    <Container className="py-5">
+      <Card className="shadow">
+        <Card.Header className="bg-primary text-white">
+          <h2 className="mb-0">Cadastrar Novo Funcionário</h2>
+        </Card.Header>
+        
+        <Card.Body>
+          {mensagem.texto && (
+            <Alert variant={mensagem.tipo} onClose={() => setMensagem({ texto: '', tipo: '' })} dismissible>
+              {mensagem.texto}
+            </Alert>
+          )}
 
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <input
-          type="text"
-          placeholder="Nome"
-          className="border w-full p-2"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          className="border w-full p-2"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Senha"
-          className="border w-full p-2"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-        />
-        <select
-          className="border w-full p-2"
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-        >
-          <option value="admin">Administrador</option>
-          <option value="gerente">Gerente</option>
-          <option value="funcionario">Funcionário</option>
-        </select>
-        <button className="bg-green-600 text-white px-4 py-2 rounded" type="submit">
-          Cadastrar
-        </button>
-      </form>
+          <Form noValidate validated={validated} onSubmit={handleSubmit}>
+            <Form.Group className="mb-3" controlId="formNome">
+              <Form.Label>Nome Completo</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Digite o nome completo"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                required
+              />
+              <Form.Control.Feedback type="invalid">
+                Por favor, insira o nome do funcionário.
+              </Form.Control.Feedback>
+            </Form.Group>
 
-      {mensagem && <p className="mt-4 text-center">{mensagem}</p>}
-    </div>
+            <Form.Group className="mb-3" controlId="formEmail">
+              <Form.Label>Email</Form.Label>
+              <Form.Control
+                type="email"
+                placeholder="exemplo@empresa.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <Form.Control.Feedback type="invalid">
+                Por favor, insira um email válido.
+              </Form.Control.Feedback>
+            </Form.Group>
+
+            <Form.Group className="mb-3" controlId="formSenha">
+              <Form.Label>Senha</Form.Label>
+              <Form.Control
+                type="password"
+                placeholder="Crie uma senha segura"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                required
+                minLength={6}
+              />
+              <Form.Control.Feedback type="invalid">
+                A senha deve ter pelo menos 6 caracteres.
+              </Form.Control.Feedback>
+              <Form.Text className="text-muted">
+                Mínimo de 6 caracteres
+              </Form.Text>
+            </Form.Group>
+
+            <Form.Group className="mb-4" controlId="formCargo">
+              <Form.Label>Cargo</Form.Label>
+              <Form.Select 
+                value={role} 
+                onChange={(e) => setRole(e.target.value)}
+                required
+              >
+                <option value="admin">Administrador</option>
+                <option value="gerente">Gerente</option>
+                <option value="funcionario">Funcionário</option>
+              </Form.Select>
+            </Form.Group>
+
+            <div className="d-grid gap-2">
+              <Button variant="primary" type="submit" size="lg">
+                Cadastrar Funcionário
+              </Button>
+            </div>
+          </Form>
+        </Card.Body>
+      </Card>
+    </Container>
   );
 }
