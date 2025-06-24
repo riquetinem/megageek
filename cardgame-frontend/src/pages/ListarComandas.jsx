@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { getComandas } from '../api/comandas';
+import { getComandasDoDia, getComandasFiltradas } from '../api/comandas';
 import { getClientes } from '../api/cliente';
 import { getUsuarios } from '../api/user';
 import { formatDateToBr } from '../utils/dateFormatter';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 
 // Componentes estilizados
 const Container = styled.div`
@@ -51,17 +52,14 @@ const Button = styled.button`
   padding: 0.8rem 1.5rem;
   border: none;
   border-radius: 4px;
-  background-color: #4e73df;
+  background-color: ${props => props.$active ? '#2c3e50' : '#4e73df'};
   color: white;
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s;
-  grid-column: 1 / -1;
-  max-width: 200px;
-  margin: 0 auto;
   
   &:hover {
-    background-color: #3a5bbf;
+    background-color: ${props => props.$active ? '#1a252f' : '#3a5bbf'};
   }
 `;
 
@@ -118,6 +116,33 @@ const StatusBadge = styled.span`
   }
 `;
 
+const TotalContainer = styled.div`
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: right;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+`;
+
+const ResetButton = styled(Button)`
+  background-color: #6c757d;
+  
+  &:hover {
+    background-color: #5a6268;
+  }
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  grid-column: 1 / -1;
+  margin-bottom: 1rem;
+`;
+
 export default function ListarComandas() {
   const [comandas, setComandas] = useState([]);
   const [clientes, setClientes] = useState([]);
@@ -126,94 +151,223 @@ export default function ListarComandas() {
     clienteId: '',
     usuarioId: '',
     dataInicio: '',
-    dataFim: ''
+    dataFim: '',
+    status: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [modoFiltro, setModoFiltro] = useState('hoje');
+
+  const navigate = useNavigate();
+
+   const handleClickComanda = (comandaId) => {
+    navigate(`/comandas/${comandaId}`);
+  };
 
   useEffect(() => {
     carregarDados();
   }, []);
 
   async function carregarDados() {
-    const [c, u] = await Promise.all([
-      getClientes(),
-      getUsuarios()
-    ]);
-    setClientes(c);
-    setUsuarios(u);
+    try {
+      setLoading(true);
+      const [c, u] = await Promise.all([
+        getClientes(),
+        getUsuarios()
+      ]);
+      setClientes(c);
+      setUsuarios(u);
+      await buscarComandasDoDia();
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  async function buscarComandas() {
-    const query = new URLSearchParams(filtros).toString();
-    const data = await getComandas(query);
-    setComandas(data);
+  async function buscarComandasDoDia() {
+    try {
+      setLoading(true);
+      setModoFiltro('hoje');
+      const data = await getComandasDoDia();
+      setComandas(data);
+    } catch (error) {
+      console.error('Erro ao buscar comandas do dia:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function buscarComandasFiltradas() {
+    try {
+      setLoading(true);
+      setModoFiltro('filtro');
+      
+      const params = {
+        cliente_id: filtros.clienteId,
+        usuario_id: filtros.usuarioId,
+        status: filtros.status,
+        data_inicio: filtros.dataInicio,
+        data_fim: filtros.dataFim
+      };
+
+      const data = await getComandasFiltradas(params);
+      setComandas(data);
+    } catch (error) {
+      console.error('Erro ao buscar comandas filtradas:', error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const handleChange = (e) => {
-    setFiltros({ ...filtros, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFiltros(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
+
+  const resetarFiltros = () => {
+    setFiltros({
+      clienteId: '',
+      usuarioId: '',
+      dataInicio: '',
+      dataFim: '',
+      status: ''
+    });
+  };
+
+  const formatarValor = (valor) => {
+    if (valor === null || valor === undefined || isNaN(valor)) {
+      return 'R$ 0.00';
+    }
+    return `R$ ${Number(valor).toFixed(2)}`;
+  };
+
+  const valorTotal = comandas.reduce((total, comanda) => {
+    return total + (Number(comanda.valor_total) || 0);
+  }, 0);
 
   return (
     <Container>
       <Header>Todas as Comandas</Header>
 
-      <FilterContainer>
-        <Select name="clienteId" value={filtros.clienteId} onChange={handleChange}>
-          <option value="">Todos os Clientes</option>
-          {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-        </Select>
+      <ButtonContainer>
+        <Button 
+          onClick={buscarComandasDoDia} 
+          disabled={loading}
+          $active={modoFiltro === 'hoje'}
+        >
+          Comandas do Dia
+        </Button>
+        <Button 
+          onClick={() => setModoFiltro('filtro')} 
+          disabled={loading}
+          $active={modoFiltro === 'filtro'}
+        >
+          Filtrar Comandas
+        </Button>
+      </ButtonContainer>
 
-        <Select name="usuarioId" value={filtros.usuarioId} onChange={handleChange}>
-          <option value="">Todos os Funcionários</option>
-          {usuarios.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
-        </Select>
+      {modoFiltro === 'filtro' && (
+        <FilterContainer>
+          <Select name="clienteId" value={filtros.clienteId} onChange={handleChange}>
+            <option value="">Todos os Clientes</option>
+            {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </Select>
 
-        <Input 
-          type="date" 
-          name="dataInicio" 
-          value={filtros.dataInicio} 
-          onChange={handleChange} 
-          placeholder="Data inicial"
-        />
-        
-        <Input 
-          type="date" 
-          name="dataFim" 
-          value={filtros.dataFim} 
-          onChange={handleChange} 
-          placeholder="Data final"
-        />
+          <Select name="usuarioId" value={filtros.usuarioId} onChange={handleChange}>
+            <option value="">Todos os Funcionários</option>
+            {usuarios.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
+          </Select>
 
-        <Button onClick={buscarComandas}>Buscar Comandas</Button>
-      </FilterContainer>
+          <Select name="status" value={filtros.status} onChange={handleChange}>
+            <option value="">Todos os Status</option>
+            <option value="aberta">Aberta</option>
+            <option value="fechada">Fechada</option>
+          </Select>
 
-      <Table>
-        <TableHeader>
-          <tr>
-            <TableHeaderCell>#</TableHeaderCell>
-            <TableHeaderCell>Cliente</TableHeaderCell>
-            <TableHeaderCell>Funcionário</TableHeaderCell>
-            <TableHeaderCell>Abertura</TableHeaderCell>
-            <TableHeaderCell>Fechamento</TableHeaderCell>
-            <TableHeaderCell>Status</TableHeaderCell>
-          </tr>
-        </TableHeader>
-        <tbody>
-          {comandas.map(c => (
-            <TableRow key={c.id}>
-              <TableCell>{c.id}</TableCell>
-              <TableCell>{c.Cliente?.nome || '-'}</TableCell>
-              <TableCell>{c.Usuario?.nome || '-'}</TableCell>
-              <TableCell>{formatDateToBr(c.data_abertura)}</TableCell>
-              <TableCell>{c.status == 'fechada' ? formatDateToBr(c.data_fechamento) : '-'}</TableCell>
-              <TableCell>
-                <StatusBadge className={c.status == 'fechada' ? 'closed' : 'open'}>
-                  {c.status	== 'fechada' ? 'Fechada' : 'Aberta'}
-                </StatusBadge>
-              </TableCell>
-            </TableRow>
-          ))}
-        </tbody>
-      </Table>
+          <Input 
+            type="date" 
+            name="dataInicio" 
+            value={filtros.dataInicio} 
+            onChange={handleChange} 
+            placeholder="Data inicial"
+          />
+          
+          <Input 
+            type="date" 
+            name="dataFim" 
+            value={filtros.dataFim} 
+            onChange={handleChange} 
+            placeholder="Data final"
+          />
+
+          <ButtonContainer>
+            <Button onClick={buscarComandasFiltradas} disabled={loading}>
+              {loading ? 'Buscando...' : 'Aplicar Filtros'}
+            </Button>
+            <ResetButton onClick={resetarFiltros} disabled={loading}>
+              Limpar Filtros
+            </ResetButton>
+          </ButtonContainer>
+        </FilterContainer>
+      )}
+
+      {loading ? (
+        <p>Carregando...</p>
+      ) : (
+        <>
+          <Table>
+            <TableHeader>
+              <tr>
+                <TableHeaderCell>#</TableHeaderCell>
+                <TableHeaderCell>Cliente</TableHeaderCell>
+                <TableHeaderCell>Funcionário</TableHeaderCell>
+                <TableHeaderCell>Valor Total</TableHeaderCell>
+                <TableHeaderCell>Abertura</TableHeaderCell>
+                <TableHeaderCell>Fechamento</TableHeaderCell>
+                <TableHeaderCell>Status</TableHeaderCell>
+              </tr>
+            </TableHeader>
+            <tbody>
+              {comandas.length > 0 ? (
+                comandas.map(c => (
+                  <TableRow 
+                    key={c.id}
+                    onClick={() => handleClickComanda(c.id)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <TableCell>{c.id}</TableCell>
+                    <TableCell>{c.Cliente?.nome || '-'}</TableCell>
+                    <TableCell>{c.abertoPor?.nome || '-'}</TableCell>
+                    <TableCell>{formatarValor(c.valor_total)}</TableCell>
+                    <TableCell>{formatDateToBr(c.data_abertura)}</TableCell>
+                    <TableCell>{c.status === 'fechada' ? formatDateToBr(c.data_fechamento) : '-'}</TableCell>
+                    <TableCell>
+                      <StatusBadge className={c.status === 'fechada' ? 'closed' : 'open'}>
+                        {c.status === 'fechada' ? 'Fechada' : 'Aberta'}
+                      </StatusBadge>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan="7" style={{ textAlign: 'center' }}>
+                    Nenhuma comanda encontrada
+                  </TableCell>
+                </TableRow>
+              )}
+            </tbody>
+          </Table>
+
+          {comandas.length > 0 && (
+            <TotalContainer>
+              Valor Total das Comandas Listadas: {formatarValor(valorTotal)}
+            </TotalContainer>
+          )}
+        </>
+      )}
     </Container>
   );
 }

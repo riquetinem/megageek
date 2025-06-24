@@ -1,4 +1,5 @@
 const { Comanda, Cliente, User, ItemComanda, Produto } = require('../models');
+const { Op } = require('sequelize'); // Adicione esta linha
 
 module.exports = {
   async getAll(req, res) {
@@ -105,6 +106,78 @@ module.exports = {
     } catch (err) {
       console.error('Erro ao fechar comanda:', err);
       res.status(500).json({ error: 'Erro ao fechar comanda' });
+    }
+  },
+
+  async getComandasDoDia(req, res) {
+    try {
+      const hoje = new Date();
+      const inicioDia = new Date(hoje.setHours(0, 0, 0, 0));
+      const fimDia = new Date(hoje.setHours(23, 59, 59, 999));
+
+      const comandas = await Comanda.findAll({
+        where: {
+          data_abertura: {
+            [Op.between]: [inicioDia, fimDia]
+          }
+        },
+        include: [
+          { model: Cliente },
+          { model: User, as: 'abertoPor' }
+        ],
+        order: [['data_abertura', 'DESC']]
+      });
+
+      console.log(hoje)
+      console.log(comandas);
+
+      res.json(comandas);
+    } catch (err) {
+      console.error('Erro ao buscar comandas do dia:', err);
+      res.status(500).json({ error: 'Erro ao buscar comandas do dia' });
+    }
+  },
+
+  async getComandasFiltradas(req, res) {
+    try {
+      const { cliente_id, usuario_id, status, data_inicio, data_fim } = req.query;
+      const where = {};
+
+      if (status) where.status = status;
+      if (cliente_id) where.cliente_id = cliente_id;
+      if (usuario_id) where.aberto_por_id = usuario_id;
+
+      if (data_inicio && data_fim) {
+        where.data_abertura = {
+          [Op.between]: [
+            new Date(data_inicio),
+            new Date(data_fim + 'T23:59:59.999Z')
+          ]
+        };
+      } else if (data_inicio) {
+        where.data_abertura = {
+          [Op.gte]: new Date(data_inicio)
+        };
+      } else if (data_fim) {
+        where.data_abertura = {
+          [Op.lte]: new Date(data_fim + 'T23:59:59.999Z')
+        };
+      }
+
+      const comandas = await Comanda.findAll({
+        where,
+        include: [
+          { model: Cliente },
+          { model: User, as: 'abertoPor' },
+          { model: User, as: 'fechadoPor' },
+        ],
+        order: [['data_abertura', 'DESC']]
+      });
+
+      res.json(comandas);
+    } catch (err) {
+      console.error('Erro ao buscar comandas filtradas:', err);
+      res.status(500).json({ error: 'Erro ao buscar comandas filtradas' });
     }
   }
 };

@@ -60,3 +60,13 @@ export const atualizarQuantidadeItem = async (itemId, quantidade) => {
   });
   return response.data;
 };
+
+export const getComandasDoDia = async () => {
+  const response = await api.get('/comanda/todas/hoje');
+  return response.data;
+};
+
+export const getComandasFiltradas = async (filtros) => {
+  const response = await api.get('/comanda/todas/filtradas', { params: filtros });
+  return response.data;
+};

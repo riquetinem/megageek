@@ -57,8 +57,6 @@ module.exports = {
       const { id } = req.params;
       const { novaQuantidade } = req.body;
 
-      console.log(novaQuantidade, id);
-
       const item = await ItemComanda.findByPk(id, { include: Produto });
       if (!item) return res.status(404).json({ error: 'Item não encontrado' });
 

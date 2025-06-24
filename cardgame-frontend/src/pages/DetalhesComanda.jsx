@@ -268,8 +268,8 @@ export default function DetalhesComanda() {
           
           <InfoItem>
             <strong>Status</strong>
-            <span style={{ color: comanda.fechada ? '#e74c3c' : '#28a745' }}>
-              {comanda.fechada ? 'Fechada' : 'Aberta'}
+            <span style={{ color: comanda.status == 'fechada' ? '#e74c3c' : '#28a745' }}>
+              {comanda.status == 'fechada' ? 'Fechada' : 'Aberta'}
             </span>
           </InfoItem>
           
@@ -288,7 +288,7 @@ export default function DetalhesComanda() {
           Valor Total: R$ {valorTotalComanda}
         </TotalValue>
         
-        {!comanda.fechada && (
+        {comanda.status != 'fechada' && (
           <Button className="danger" onClick={handleFecharComanda}>
             Fechar Comanda
           </Button>
@@ -303,7 +303,7 @@ export default function DetalhesComanda() {
               <div className="product-name">{item.Produto.nome}</div>
               <div className="product-meta">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  {!comanda.fechada ? (
+                  {comanda.status == 'aberta' ? (
                     <>
                       <button 
                         onClick={() => handleAtualizarQuantidade(item.id, item.quantidade - 1)}
@@ -338,7 +338,7 @@ export default function DetalhesComanda() {
               </div>
             </ItemDetails>
             
-            {!comanda.fechada && (
+            {comanda.status == 'aberta' && (
               <RemoveButton
                 onClick={async () => {
                   if (confirm('Tem certeza que deseja remover este item?')) {
@@ -354,7 +354,7 @@ export default function DetalhesComanda() {
         ))}
       </ItemsList>
 
-      {!comanda.fechada && (
+      {comanda.status == 'aberta' && (
         <AddItemSection>
           <h2 className="text-lg font-semibold mb-4">Adicionar Item</h2>
           
