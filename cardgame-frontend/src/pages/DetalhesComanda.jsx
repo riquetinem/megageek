@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { buscarComanda, adicionarItemComanda, fecharComanda, removerItemComanda, atualizarQuantidadeItem } from '../api/comandas';
 import { useAuth } from '../auth/AuthContext';
@@ -119,14 +119,6 @@ const FormRow = styled.div`
   }
 `;
 
-const Select = styled.select`
-  flex: 2;
-  padding: 0.8rem;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 1rem;
-`;
-
 const Input = styled.input`
   flex: 1;
   padding: 0.8rem;
@@ -173,6 +165,47 @@ const RemoveButton = styled.button`
   }
 `;
 
+const ComboboxContainer = styled.div`
+  position: relative;
+  flex: 2;
+`;
+
+const ComboboxInput = styled.input`
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+`;
+
+const ComboboxList = styled.ul`
+  position: absolute;
+  width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: white;
+  border: 1px solid #ced4da;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+`;
+
+const ComboboxItem = styled.li`
+  padding: 0.8rem;
+  cursor: pointer;
+  &:hover {
+    background-color: #f8f9fa;
+  }
+  &.selected {
+    background-color: #e9ecef;
+    font-weight: bold;
+  }
+`;
+
 export default function DetalhesComanda() {
   const { user } = useAuth();
   const { id } = useParams();
@@ -181,6 +214,9 @@ export default function DetalhesComanda() {
   const [produtoSelecionado, setProdutoSelecionado] = useState('');
   const [quantidade, setQuantidade] = useState(1);
   const [precoUnitario, setPrecoUnitario] = useState('');
+  const [isComboboxOpen, setIsComboboxOpen] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const comboboxRef = useRef(null);
 
   const carregarDados = async () => {
     const c = await buscarComanda(id);
@@ -198,14 +234,26 @@ export default function DetalhesComanda() {
       const quantidade = Number(item.quantidade) || 0;
       return total + (preco * quantidade);
     }, 0).toFixed(2);
-  }, [comanda]); 
+  }, [comanda]);
 
-  function calcularTotal(preco, quantidade) {
-    const precoNum = Number(preco) || 0;
-    const quantidadeNum = Number(quantidade) || 1;
-    
-    return (precoNum * quantidadeNum).toFixed(2);
-  }
+  // Filtra e ordena os produtos
+  const filteredProducts = useMemo(() => {
+    const sorted = [...produtos].sort((a, b) => a.nome.localeCompare(b.nome));
+    return inputValue 
+      ? sorted.filter(p => p.nome.toLowerCase().includes(inputValue.toLowerCase()))
+      : sorted;
+  }, [produtos, inputValue]);
+
+  // Fecha o combobox quando clica fora
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (comboboxRef.current && !comboboxRef.current.contains(event.target)) {
+        setIsComboboxOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     carregarDados();
@@ -220,6 +268,7 @@ export default function DetalhesComanda() {
 
     await adicionarItemComanda(comanda.id, Number(produtoSelecionado), quantidade, user, Number(precoUnitario));
     setProdutoSelecionado('');
+    setInputValue('');
     setQuantidade(1);
     setPrecoUnitario('');
     await carregarDados();
@@ -247,6 +296,19 @@ export default function DetalhesComanda() {
     }
     await carregarDados();
   };
+
+  const handleProductSelect = (product) => {
+    setProdutoSelecionado(product.id.toString());
+    setPrecoUnitario(product.preco_padrao);
+    setInputValue(product.nome);
+    setIsComboboxOpen(false);
+  };
+
+  function calcularTotal(preco, quantidade) {
+    const precoNum = Number(preco) || 0;
+    const quantidadeNum = Number(quantidade) || 1;
+    return (precoNum * quantidadeNum).toFixed(2);
+  }
 
   if (!comanda) return <div>Carregando...</div>;
 
@@ -359,26 +421,35 @@ export default function DetalhesComanda() {
           <h2 className="text-lg font-semibold mb-4">Adicionar Item</h2>
           
           <FormRow>
-            <Select
-              value={produtoSelecionado || ''}
-              onChange={(e) => {
-                const selectedId = e.target.value;
-                setProdutoSelecionado(selectedId);
-                const produto = produtos.find(p => p.id.toString() === selectedId);
-                if (produto) {
-                  setPrecoUnitario(produto.preco_padrao);
-                } else {
-                  setPrecoUnitario('');
-                }
-              }}
-            >
-              <option value="">Selecione um produto</option>
-              {produtos.map(p => (
-                <option key={p.id} value={p.id.toString()}>
-                  {p.nome} - R$ {Number(p.preco_padrao).toFixed(2)}
-                </option>
-              ))}
-            </Select>
+            <ComboboxContainer ref={comboboxRef}>
+              <ComboboxInput
+                type="text"
+                value={inputValue}
+                onChange={(e) => {
+                  setInputValue(e.target.value);
+                  setIsComboboxOpen(true);
+                }}
+                onFocus={() => setIsComboboxOpen(true)}
+                placeholder="Busque e selecione um produto"
+              />
+              {isComboboxOpen && (
+                <ComboboxList>
+                  {filteredProducts.length > 0 ? (
+                    filteredProducts.map(p => (
+                      <ComboboxItem
+                        key={p.id}
+                        onClick={() => handleProductSelect(p)}
+                        className={produtoSelecionado === p.id.toString() ? 'selected' : ''}
+                      >
+                        {p.nome} - R$ {Number(p.preco_padrao).toFixed(2)}
+                      </ComboboxItem>
+                    ))
+                  ) : (
+                    <ComboboxItem>Nenhum produto encontrado</ComboboxItem>
+                  )}
+                </ComboboxList>
+              )}
+            </ComboboxContainer>
             
             <Input
               type="number"
