@@ -50,5 +50,40 @@ module.exports = {
     } catch (err) {
       res.status(500).json({ error: 'Erro ao remover item' });
     }
+  },
+
+   async updateQuantidade(req, res) {
+    try {
+      const { id } = req.params;
+      const { novaQuantidade } = req.body;
+
+      console.log(novaQuantidade, id);
+
+      const item = await ItemComanda.findByPk(id, { include: Produto });
+      if (!item) return res.status(404).json({ error: 'Item não encontrado' });
+
+      const comanda = await Comanda.findByPk(item.comanda_id);
+      if (!comanda || comanda.status === 'fechada') {
+        return res.status(400).json({ error: 'Comanda já está fechada ou não encontrada' });
+      }
+
+      const diferenca = novaQuantidade - item.quantidade;
+
+      if (diferenca > 0 && item.Produto.estoque < diferenca) {
+        return res.status(400).json({ error: 'Estoque insuficiente para atualizar a quantidade' });
+      }
+
+      // Atualiza estoque
+      item.Produto.estoque -= diferenca;
+      await item.Produto.save();
+
+      item.quantidade = novaQuantidade;
+      await item.save();
+
+      res.json({ message: 'Quantidade atualizada com sucesso', item });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Erro ao atualizar quantidade' });
+    }
   }
 };

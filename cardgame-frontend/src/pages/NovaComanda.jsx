@@ -33,7 +33,7 @@ export default function NovaComanda() {
 
   const clientesFiltrados = clientes.filter(c =>
     c.nome.toLowerCase().includes(busca.toLowerCase()) ||
-    c.email.toLowerCase().includes(busca.toLowerCase())
+    c.telefone.toLowerCase().includes(busca.toLowerCase())
   );
 
   return (
@@ -55,14 +55,14 @@ export default function NovaComanda() {
             onClick={() => setClienteSelecionado(cliente)}
             className={`p-2 border rounded cursor-pointer ${clienteSelecionado?.id === cliente.id ? 'bg-blue-100' : ''}`}
           >
-            {cliente.nome} - {cliente.email}
+            {cliente.nome} - {cliente.telefone}
           </li>
         ))}
       </ul>
 
       {clienteSelecionado && (
         <div className="mb-4">
-          <p><strong>Selecionado:</strong> {clienteSelecionado.nome} - {clienteSelecionado.email}</p>
+          <p><strong>Selecionado:</strong> {clienteSelecionado.nome} - {clienteSelecionado.telefone}</p>
         </div>
       )}
 

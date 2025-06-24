@@ -1,10 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   const Cliente = sequelize.define('Cliente', {
     nome: { type: DataTypes.STRING, allowNull: false },
-    email: {
-      type: DataTypes.STRING,
-      validate: { isEmail: true }
-    },
     telefone: {
       type: DataTypes.STRING
     }

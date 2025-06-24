@@ -24,8 +24,8 @@ module.exports = {
   async create(req, res) {
     try {
       console.log(req.body.user);
-      const { nome, email, telefone, user } = req.body;
-      const cliente = await Cliente.create({ nome, email, telefone, criado_por_id: user.id });
+      const { nome, telefone, user } = req.body;
+      const cliente = await Cliente.create({ nome, telefone, criado_por_id: user.id });
       res.status(201).json(cliente);
     } catch (err) {
       res.status(500).json({ error: 'Erro ao criar cliente' });

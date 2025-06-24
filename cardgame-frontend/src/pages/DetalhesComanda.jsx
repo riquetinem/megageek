@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { buscarComanda, adicionarItemComanda, fecharComanda, removerItemComanda } from '../api/comandas';
+import { buscarComanda, adicionarItemComanda, fecharComanda, removerItemComanda, atualizarQuantidadeItem } from '../api/comandas';
 import { useAuth } from '../auth/AuthContext';
 import api from '../api/api';
 import { formatDateToBr } from '../utils/dateFormatter';
@@ -184,6 +184,9 @@ export default function DetalhesComanda() {
 
   const carregarDados = async () => {
     const c = await buscarComanda(id);
+    if (c && c.itens) {
+      c.itens.sort((a, b) => a.id - b.id);
+    }
     setComanda(c);
   };
 
@@ -232,6 +235,19 @@ export default function DetalhesComanda() {
     }
   };
 
+  const handleAtualizarQuantidade = async (itemId, novaQuantidade) => {
+    if (novaQuantidade <= 0) {
+      if (confirm('Quantidade zero irá remover o item. Deseja continuar?')) {
+        await removerItemComanda(itemId);
+      } else {
+        return;
+      }
+    } else {
+      await atualizarQuantidadeItem(itemId, novaQuantidade);
+    }
+    await carregarDados();
+  };
+
   if (!comanda) return <div>Carregando...</div>;
 
   return (
@@ -247,7 +263,7 @@ export default function DetalhesComanda() {
 
           <InfoItem>
             <strong>Dados do Cliente</strong>
-            <span>{comanda.Cliente?.email || '-'} {comanda.Cliente?.telefone || '-'}</span>
+            <span>{comanda.Cliente?.telefone || '-'}</span>
           </InfoItem>
           
           <InfoItem>
@@ -286,7 +302,37 @@ export default function DetalhesComanda() {
             <ItemDetails>
               <div className="product-name">{item.Produto.nome}</div>
               <div className="product-meta">
-                <span>{item.quantidade}x</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {!comanda.fechada ? (
+                    <>
+                      <button 
+                        onClick={() => handleAtualizarQuantidade(item.id, item.quantidade - 1)}
+                        style={{ 
+                          padding: '0.25rem 0.5rem',
+                          border: '1px solid #ced4da',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        -
+                      </button>
+                      <span>{item.quantidade}x</span>
+                      <button 
+                        onClick={() => handleAtualizarQuantidade(item.id, item.quantidade + 1)}
+                        style={{ 
+                          padding: '0.25rem 0.5rem',
+                          border: '1px solid #ced4da',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        +
+                      </button>
+                    </>
+                  ) : (
+                    <span>{item.quantidade}x</span>
+                  )}
+                </div>
                 <span>R$ {item.preco_unitario}</span>
                 <span>Total: R$ {calcularTotal(item.preco_unitario, item.quantidade)}</span>
               </div>
@@ -314,13 +360,11 @@ export default function DetalhesComanda() {
           
           <FormRow>
             <Select
-              value={produtoSelecionado || ''} // Garante que nunca será null
+              value={produtoSelecionado || ''}
               onChange={(e) => {
                 const selectedId = e.target.value;
                 setProdutoSelecionado(selectedId);
-                
-                // Define o preço padrão quando um produto é selecionado
-                const produto = produtos.find(p => p.id.toString() === selectedId); // Compare como strings
+                const produto = produtos.find(p => p.id.toString() === selectedId);
                 if (produto) {
                   setPrecoUnitario(produto.preco_padrao);
                 } else {
@@ -330,7 +374,7 @@ export default function DetalhesComanda() {
             >
               <option value="">Selecione um produto</option>
               {produtos.map(p => (
-                <option key={p.id} value={p.id.toString()}> {/* Converta o id para string */}
+                <option key={p.id} value={p.id.toString()}>
                   {p.nome} - R$ {Number(p.preco_padrao).toFixed(2)}
                 </option>
               ))}

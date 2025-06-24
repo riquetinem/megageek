@@ -170,7 +170,6 @@ export default function Clientes() {
   const { user } = useAuth();
   const [clientes, setClientes] = useState([]);
   const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
   const [editando, setEditando] = useState(null);
   const [filtro, setFiltro] = useState('');
@@ -195,7 +194,7 @@ export default function Clientes() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const cliente = { nome, email, telefone, user };
+      const cliente = { nome, telefone, user };
       if (editando) {
         await updateCliente(editando.id, cliente);
         setEditando(null);
@@ -203,7 +202,6 @@ export default function Clientes() {
         await createCliente(cliente);
       }
       setNome('');
-      setEmail('');
       setTelefone('');
       await carregarClientes();
     } catch (err) {
@@ -214,7 +212,6 @@ export default function Clientes() {
 
   const handleEditar = (cliente) => {
     setNome(cliente.nome);
-    setEmail(cliente.email);
     setTelefone(cliente.telefone);
     setEditando(cliente);
   };
@@ -232,7 +229,6 @@ export default function Clientes() {
 
   const clientesFiltrados = clientes.filter((c) => 
     c.nome.toLowerCase().includes(filtro.toLowerCase()) ||
-    (c.email && c.email.toLowerCase().includes(filtro.toLowerCase())) ||
     (c.telefone && c.telefone.includes(filtro))
   );
 
@@ -250,12 +246,6 @@ export default function Clientes() {
             required
           />
           <FormInput
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <FormInput
             type="text"
             placeholder="Telefone"
             value={telefone}
@@ -270,7 +260,6 @@ export default function Clientes() {
               onClick={() => {
                 setEditando(null);
                 setNome('');
-                setEmail('');
                 setTelefone('');
               }}
               style={{
@@ -292,7 +281,7 @@ export default function Clientes() {
       <SearchContainer>
         <SearchInput
           type="text"
-          placeholder="Pesquisar clientes por nome, email ou telefone"
+          placeholder="Pesquisar clientes por nome ou telefone"
           value={filtro}
           onChange={(e) => setFiltro(e.target.value)}
         />
@@ -310,7 +299,6 @@ export default function Clientes() {
             <ClientItem key={cliente.id}>
               <ClientInfo>
                 <strong>{cliente.nome}</strong>
-                {email && <span>Email: {cliente.email}</span>}
                 {telefone && <span>Telefone: {cliente.telefone}</span>}
                 <span>Cadastrado por: {cliente.cadastrado_por_usuario?.nome || 'Sistema'}</span>
               </ClientInfo>

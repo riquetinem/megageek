@@ -8,7 +8,6 @@ export default function ClienteFormPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -18,7 +17,6 @@ export default function ClienteFormPage() {
       getClientById(id)
         .then(data => {
           setNome(data.nome);
-          setEmail(data.email);
           setTelefone(data.telefone);
         })
         .finally(() => setLoading(false));
@@ -28,12 +26,12 @@ export default function ClienteFormPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const payload = { nome, email, telefone, user };
+      const payload = { nome, telefone, user };
       console.log('Payload sendo enviado:', payload); // 👈 adicione isso
       if (id) {
-        await updateClient(id, { nome, email, telefone });
+        await updateClient(id, { nome, telefone });
       } else {
-        await createClient({ nome, email, telefone, user });
+        await createClient({ nome, telefone, user });
       }
       navigate('/clientes');
     } catch (err) {
@@ -56,15 +54,6 @@ export default function ClienteFormPage() {
             onChange={(e) => setNome(e.target.value)}
             className="w-full border rounded p-2"
             required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full border rounded p-2"
           />
         </div>
         <div>

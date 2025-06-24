@@ -48,3 +48,15 @@ export async function removerItemComanda(itemId) {
   const response = await api.delete(`/item-comanda/${itemId}`);
   return response.data;
 }
+
+export const atualizarQuantidadeItem = async (itemId, quantidade) => {
+  const novaQuantidade = Number(quantidade);
+  if (isNaN(novaQuantidade)) {
+    throw new Error('Quantidade inválida');
+  }
+
+  const response = await api.put(`/item-comanda/${itemId}/quantidade`, {
+    novaQuantidade: novaQuantidade
+  });
+  return response.data;
+};
