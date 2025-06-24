@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 // import { useAuth } from './auth/AuthContext';
 import ProtectedLayout from './components/ProtectedLayout';
-import Login from './pages/Login';
+import Login from './pages/Login/index';
 import Dashboard from './pages/Dashboard';
 import NovaComanda from './pages/NovaComanda';
 import DetalhesComanda from './pages/DetalhesComanda';
